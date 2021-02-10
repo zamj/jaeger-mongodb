@@ -33,7 +33,8 @@ class SpanCollection(Collection):
 
     def create_indexes(self) -> None:
         """Create indexes required for the given collection."""
-        pass
+        self.collection.create_index("traceId")
+        self.collection.create_index("process.serviceName")
 
     def add_span(self, span: Span) -> None:
         """

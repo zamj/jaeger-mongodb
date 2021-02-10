@@ -1,0 +1,22 @@
+FROM jaegertracing/jaeger-query:latest
+FROM python:3.7-slim-buster
+COPY --from=0 /go/bin/query-linux /go/bin/query-linux
+
+RUN set -xe \
+    && apt-get update \
+    && apt-get install -y binutils libc6
+RUN pip3 install --upgrade pip
+RUN pip3 install poetry
+
+COPY . /jaeger-mongodb
+WORKDIR jaeger-mongodb
+
+RUN poetry config virtualenvs.create false
+RUN poetry install
+RUN poetry run pyinstaller main.spec -y
+
+ENV SPAN_STORAGE_TYPE "grpc-plugin"
+
+ENTRYPOINT ["/go/bin/query-linux"]
+CMD ["--grpc-storage-plugin.binary=/jaeger-mongodb/dist/main/main"]
+

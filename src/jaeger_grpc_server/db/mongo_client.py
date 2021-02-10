@@ -26,3 +26,15 @@ class MongoWrapper:
         :return: An instance of the MongoWrapper class
         """
         return cls(MongoClient(mongo_uri).get_database(_DB_NAME))
+
+    def initialize_db(self) -> None:
+        """
+        Initialize the database that the MongoWrapper is connected to.
+
+        Must be done before the mongo instance is ready to be used.
+        """
+        collection_list = [
+            self.span_collection,
+        ]
+        for collection in collection_list:
+            collection.create_indexes()

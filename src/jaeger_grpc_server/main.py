@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """Entry point for the grpc server."""
-
+import argparse
 from concurrent.futures import ThreadPoolExecutor
 from sys import stdout
 
@@ -22,11 +22,20 @@ from jaeger_grpc_server.service.span_writer import SpanWriterService
 
 def serve() -> None:
     """Set up the grpc server and start serving."""
-    config = Config()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, nargs="?", help="Location of config file")
+
+    args = parser.parse_args()
+    config = None
+    if args.config and args.config != "":
+        config = Config.from_yaml_file(args.config)
+    else:
+        config = Config()
     server = grpc.server(ThreadPoolExecutor(max_workers=10))
     server.add_insecure_port(f"127.0.0.1:{config.grpc_port}")
 
     mongo = MongoWrapper.from_uri(config.mongo_url)
+    mongo.initialize_db()
 
     # Add all the grpc services to the server.
     span_writer = SpanWriterService(mongo)
